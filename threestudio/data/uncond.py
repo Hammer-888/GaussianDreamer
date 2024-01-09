@@ -24,34 +24,46 @@ from threestudio.utils.typing import *
 import os
 import numpy as np
 
+
 def safe_normalize(x, eps=1e-20):
     return x / torch.sqrt(torch.clamp(torch.sum(x * x, -1, keepdim=True), min=eps))
 
-trans_t = lambda t : torch.Tensor([
-    [1,0,0,0],
-    [0,1,0,0],
-    [0,0,1,t],
-    [0,0,0,1]]).float()
 
-rot_phi = lambda phi : torch.Tensor([
-    [1,0,0,0],
-    [0,np.cos(phi),-np.sin(phi),0],
-    [0,np.sin(phi), np.cos(phi),0],
-    [0,0,0,1]]).float()
+trans_t = lambda t: torch.Tensor(
+    [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, t], [0, 0, 0, 1]]
+).float()
 
-rot_theta = lambda th : torch.Tensor([
-    [np.cos(th),0,-np.sin(th),0],
-    [0,1,0,0],
-    [np.sin(th),0, np.cos(th),0],
-    [0,0,0,1]]).float()
+rot_phi = lambda phi: torch.Tensor(
+    [
+        [1, 0, 0, 0],
+        [0, np.cos(phi), -np.sin(phi), 0],
+        [0, np.sin(phi), np.cos(phi), 0],
+        [0, 0, 0, 1],
+    ]
+).float()
+
+rot_theta = lambda th: torch.Tensor(
+    [
+        [np.cos(th), 0, -np.sin(th), 0],
+        [0, 1, 0, 0],
+        [np.sin(th), 0, np.cos(th), 0],
+        [0, 0, 0, 1],
+    ]
+).float()
 
 
 def pose_spherical(theta, phi, radius):
     c2w = trans_t(radius)
-    c2w = rot_phi(phi/180.*np.pi) @ c2w
-    c2w = rot_theta(theta/180.*np.pi) @ c2w
-    c2w = torch.Tensor(np.array([[-1,0,0,0],[0,0,1,0],[0,1,0,0],[0,0,0,1]])) @ c2w
+    c2w = rot_phi(phi / 180.0 * np.pi) @ c2w
+    c2w = rot_theta(theta / 180.0 * np.pi) @ c2w
+    c2w = (
+        torch.Tensor(
+            np.array([[-1, 0, 0, 0], [0, 0, 1, 0], [0, 1, 0, 0], [0, 0, 0, 1]])
+        )
+        @ c2w
+    )
     return c2w
+
 
 @dataclass
 class RandomCameraDataModuleConfig:
@@ -68,18 +80,18 @@ class RandomCameraDataModuleConfig:
     n_test_views: int = 120
     elevation_range: Tuple[float, float] = (-10, 60)
     azimuth_range: Tuple[float, float] = (-180, 180)
-    camera_distance_range: Tuple[float, float] = (4.,6.)
+    camera_distance_range: Tuple[float, float] = (4.0, 6.0)
     fovy_range: Tuple[float, float] = (
         40,
         70,
     )  # in degrees, in vertical direction (along height)
-    camera_perturb: float = 0.
-    center_perturb: float = 0.
+    camera_perturb: float = 0.0
+    center_perturb: float = 0.0
     up_perturb: float = 0.0
     light_position_perturb: float = 1.0
     light_distance_range: Tuple[float, float] = (0.8, 1.5)
     eval_elevation_deg: float = 15.0
-    eval_camera_distance: float = 6.
+    eval_camera_distance: float = 6.0
     eval_fovy_deg: float = 70.0
     light_sample_strategy: str = "dreamfusion"
     batch_uniform_azimuth: bool = True
@@ -131,7 +143,6 @@ class RandomCameraIterableDataset(IterableDataset, Updateable):
         self.camera_distance_range = self.cfg.camera_distance_range
         self.fovy_range = self.cfg.fovy_range
         self.load_type = self.cfg.load_type
-
 
     def update_step(self, epoch: int, global_step: int, on_load_weights: bool = False):
         size_ind = bisect.bisect_right(self.resolution_milestones, global_step) - 1
@@ -280,7 +291,10 @@ class RandomCameraIterableDataset(IterableDataset, Updateable):
             + self.cfg.light_distance_range[0]
         )
 
-        if self.cfg.light_sample_strategy == "dreamfusion" or self.cfg.light_sample_strategy == "dreamfusion3dgs":
+        if (
+            self.cfg.light_sample_strategy == "dreamfusion"
+            or self.cfg.light_sample_strategy == "dreamfusion3dgs"
+        ):
             # sample light direction from a normal distribution with mean camera_position and std light_position_perturb
             light_direction: Float[Tensor, "B 3"] = F.normalize(
                 camera_positions
@@ -348,7 +362,6 @@ class RandomCameraIterableDataset(IterableDataset, Updateable):
             directions[:, :, :, :2] / focal_length[:, None, None, None]
         )
 
-
         proj_mtx: Float[Tensor, "B 4 4"] = get_projection_matrix(
             fovy, self.width / self.height, 0.1, 1000.0
         )  # FIXME: hard-coded near and far
@@ -356,41 +369,41 @@ class RandomCameraIterableDataset(IterableDataset, Updateable):
 
         c2w_3dgs = []
         for id in range(self.batch_size):
-            render_pose = pose_spherical( azimuth_deg[id] + 180.0 - self.load_type*90 , -elevation_deg[id], camera_distances[id])
+            render_pose = pose_spherical(
+                azimuth_deg[id] + 180.0 - self.load_type * 90,
+                -elevation_deg[id],
+                camera_distances[id],
+            )
             # print(azimuth_deg[id] , -elevation_deg[id], camera_distances[id]*2.0)
             # print(render_pose)
 
             matrix = torch.linalg.inv(render_pose)
             # R = -np.transpose(matrix[:3,:3])
             # R = -np.transpose(matrix[:3,:3])
-            R = -torch.transpose(matrix[:3,:3], 0, 1)
-            R[:,0] = -R[:,0]
+            R = -torch.transpose(matrix[:3, :3], 0, 1)
+            R[:, 0] = -R[:, 0]
             T = -matrix[:3, 3]
-            c2w_single = torch.cat([R, T[:,None]], 1)
-            c2w_single = torch.cat([c2w_single, torch.tensor([[0,0,0,1]])], 0)
+            c2w_single = torch.cat([R, T[:, None]], 1)
+            c2w_single = torch.cat([c2w_single, torch.tensor([[0, 0, 0, 1]])], 0)
 
             # c2w_single = convert_camera_to_world_transform(c2w_single)
-            
+
             c2w_3dgs.append(c2w_single)
-        
+
         c2w_3dgs = torch.stack(c2w_3dgs, 0)
-
-
-
 
         return {
             "mvp_mtx": mvp_mtx,
             "camera_positions": camera_positions,
             "c2w": c2w,
-            "c2w_3dgs":c2w_3dgs,
+            "c2w_3dgs": c2w_3dgs,
             "light_positions": light_positions,
             "elevation": elevation_deg,
             "azimuth": azimuth_deg,
             "camera_distances": camera_distances,
             "height": self.height,
             "width": self.width,
-            "fovy":fovy,
-
+            "fovy": fovy,
         }
 
 
@@ -409,9 +422,9 @@ class RandomCameraDataset(Dataset):
         azimuth_deg: Float[Tensor, "B"]
         if self.split == "val":
             # make sure the first and last view are not the same
-            azimuth_deg = torch.linspace(0., 360.0, self.n_views + 1)[: self.n_views]
+            azimuth_deg = torch.linspace(0.0, 360.0, self.n_views + 1)[: self.n_views]
         else:
-            azimuth_deg = torch.linspace(0., 360.0, self.n_views)
+            azimuth_deg = torch.linspace(0.0, 360.0, self.n_views)
         elevation_deg: Float[Tensor, "B"] = torch.full_like(
             azimuth_deg, self.cfg.eval_elevation_deg
         )
@@ -480,16 +493,20 @@ class RandomCameraDataset(Dataset):
 
         c2w_3dgs = []
         for id in range(self.n_views):
-            render_pose = pose_spherical( azimuth_deg[id] + 180.0 - self.load_type*90, -elevation_deg[id], camera_distances[id])
-            
+            render_pose = pose_spherical(
+                azimuth_deg[id] + 180.0 - self.load_type * 90,
+                -elevation_deg[id],
+                camera_distances[id],
+            )
+
             matrix = torch.linalg.inv(render_pose)
             # R = -np.transpose(matrix[:3,:3])
             # R = -np.transpose(matrix[:3,:3])
-            R = -torch.transpose(matrix[:3,:3], 0, 1)
-            R[:,0] = -R[:,0]
+            R = -torch.transpose(matrix[:3, :3], 0, 1)
+            R[:, 0] = -R[:, 0]
             T = -matrix[:3, 3]
-            c2w_single = torch.cat([R, T[:,None]], 1)
-            c2w_single = torch.cat([c2w_single, torch.tensor([[0,0,0,1]])], 0)
+            c2w_single = torch.cat([R, T[:, None]], 1)
+            c2w_single = torch.cat([c2w_single, torch.tensor([[0, 0, 0, 1]])], 0)
             # c2w_single = convert_camera_to_world_transform(c2w_single)
             c2w_3dgs.append(c2w_single)
         c2w_3dgs = torch.stack(c2w_3dgs, 0)
@@ -520,7 +537,7 @@ class RandomCameraDataset(Dataset):
             "camera_distances": self.camera_distances[index],
             "height": self.cfg.eval_height,
             "width": self.cfg.eval_width,
-            "fovy":self.fovy[index],
+            "fovy": self.fovy[index],
         }
 
     def collate(self, batch):
@@ -553,7 +570,7 @@ class RandomCameraDataModule(pl.LightningDataModule):
             dataset,
             # very important to disable multi-processing if you want to change self attributes at runtime!
             # (for example setting self.width and self.height in update_step)
-            num_workers=0,  # type: ignore
+            num_workers=7,  # type: ignore
             batch_size=batch_size,
             collate_fn=collate_fn,
         )
