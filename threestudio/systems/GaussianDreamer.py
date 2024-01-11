@@ -102,13 +102,16 @@ class GaussianDreamer(BaseLift3DSystem):
     @dataclass
     class Config(BaseLift3DSystem.Config):
         radius: float = 4
+        ambient_ratio_min: float = 0.5
+        renderer_type: str = "nerf-volume-renderer"
         sh_degree: int = 0
         load_type: int = 0
         load_path: str = "./load/shapes/stand.obj"
 
     cfg: Config
-
+    
     def configure(self) -> None:
+        super().configure()
         self.radius = self.cfg.radius
         self.sh_degree = self.cfg.sh_degree
         self.load_type = self.cfg.load_type
