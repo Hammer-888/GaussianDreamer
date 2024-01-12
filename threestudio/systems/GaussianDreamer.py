@@ -332,7 +332,7 @@ class GaussianDreamer(BaseLift3DSystem):
         self.gaussian.update_learning_rate(self.true_global_step)
 
         # adding
-        batch = batch["random_camera"]
+        # batch = batch["random_camera"]
         ambient_ratio = (
             self.cfg.ambient_ratio_min
             + (1 - self.cfg.ambient_ratio_min) * random.random()
@@ -351,9 +351,12 @@ class GaussianDreamer(BaseLift3DSystem):
         # guidance_out = self.guidance(
         #     images, prompt_utils, **batch, rgb_as_latents=False,guidance_eval=guidance_eval
         # )
+
         guidance_out = self.guidance(
             out["comp_rgb"],
-            **batch,
+            batch["elevation"],
+            batch["azimuth"],
+            batch["camera_distances"],
             rgb_as_latents=False,
             guidance_eval=guidance_eval,
         )
