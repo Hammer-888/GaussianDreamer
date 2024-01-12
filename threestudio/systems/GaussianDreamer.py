@@ -109,7 +109,7 @@ class GaussianDreamer(BaseLift3DSystem):
         load_path: str = "./load/shapes/stand.obj"
 
     cfg: Config
-    
+
     def configure(self) -> None:
         super().configure()
         self.radius = self.cfg.radius

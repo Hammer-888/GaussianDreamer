@@ -255,7 +255,7 @@ class SingleImageIterableDataset(IterableDataset, SingleImageDataBase, Updateabl
             "height": self.cfg.height,
             "width": self.cfg.width,
         }
-        import pdb; pdb.set_trace()
+        # import pdb; pdb.set_trace()
         if self.cfg.use_random_camera:
             batch["random_camera"] = self.random_pose_generator.collate(None)
 
