@@ -345,7 +345,7 @@ class GaussianDreamer(BaseLift3DSystem):
             self.cfg.ambient_ratio_min
             + (1 - self.cfg.ambient_ratio_min) * random.random()
         )
-        batch["bg_color"] = None
+        # batch["bg_color"] = None
         batch["ambient_ratio"] = ambient_ratio
 
         out = self(batch)

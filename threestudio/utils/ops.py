@@ -343,6 +343,7 @@ def get_fov_gaussian(P):
 
 def get_cam_info_gaussian(c2w, fovx, fovy, znear, zfar):
     c2w = convert_pose(c2w)
+    c2w = c2w.to(torch.float32)
     world_view_transform = torch.inverse(c2w)
 
     world_view_transform = world_view_transform.transpose(0, 1).cuda().float()
@@ -356,7 +357,7 @@ def get_cam_info_gaussian(c2w, fovx, fovy, znear, zfar):
     ).squeeze(0)
     camera_center = world_view_transform.inverse()[3, :3]
 
-    return world_view_transform, full_proj_transform, camera_center
+    return world_view_transform.to(torch.float32), full_proj_transform.to(torch.float32), camera_center.to(torch.float32)
 
 
 def binary_cross_entropy(input, target):

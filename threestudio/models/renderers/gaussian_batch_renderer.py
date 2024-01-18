@@ -3,9 +3,9 @@ from threestudio.utils.ops import get_cam_info_gaussian
 from torch.cuda.amp import autocast
 
 from gaussiansplatting.scene.gaussian_model import BasicPointCloud
-from gaussiansplatting.scene.cameras import Camera
+from threestudio.models.geometry.gaussian_base import Camera
 
-
+    
 class GaussianBatchRenderer:
     def batch_forward(self, batch):
         bs = batch["c2w_3dgs"].shape[0]
