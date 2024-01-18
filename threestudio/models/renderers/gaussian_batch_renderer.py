@@ -8,7 +8,7 @@ from gaussiansplatting.scene.cameras import Camera
 
 class GaussianBatchRenderer:
     def batch_forward(self, batch):
-        bs = batch["c2w"].shape[0]
+        bs = batch["c2w_3dgs"].shape[0]
         renders = []
         viewspace_points = []
         visibility_filters = []
@@ -21,7 +21,7 @@ class GaussianBatchRenderer:
             batch["batch_idx"] = batch_idx
             fovy = batch["fovy"][batch_idx]
             w2c, proj, cam_p = get_cam_info_gaussian(
-                c2w=batch["c2w"][batch_idx], fovx=fovy, fovy=fovy, znear=0.1, zfar=100
+                c2w=batch["c2w_3dgs"][batch_idx], fovx=fovy, fovy=fovy, znear=0.1, zfar=100
             )
 
             # import pdb; pdb.set_trace()
