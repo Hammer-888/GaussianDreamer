@@ -43,61 +43,56 @@ data:
 system_type: "gaussiandreamer-system"
 system:
 # adding-------------------------------------------------------------------------  
-  geometry_type: "implicit-volume"
+  geometry_type: "gaussian-splatting"
   geometry:
-    radius: 2.0
-    normal_type: "analytic"
+    position_lr: [0, 0.001, 0.00002, 1000]
+    scale_lr: [0, 0.01, 0.001, 1000]
+    feature_lr: 0.01
+    opacity_lr: 0.05
+    rotation_lr: 0.001
+    densification_interval: 100
+    prune_interval: 100
+    opacity_reset_interval: 100000
+    densify_from_iter: 0
+    densify_until_iter: ${trainer.max_steps}
+    prune_from_iter: 0
+    prune_until_iter: ${trainer.max_steps}
+    densify_grad_threshold: 0.01
+    min_opac_prune: 0.005
+    split_thresh: 0.02
+    radii2d_thresh: 1000
 
-    # the density initialization proposed in the DreamFusion paper
-    # does not work very well
-    # density_bias: "blob_dreamfusion"
-    # density_activation: exp
-    # density_blob_scale: 5.
-    # density_blob_std: 0.2
+    sphere: False
 
-    # use Magic3D density initialization instead
-    density_bias: "blob_magic3d"
-    density_activation: softplus
-    density_blob_scale: 10.
-    density_blob_std: 0.5
+    init_num_pts: 4096
+    pc_init_radius: 0.5
+    opacity_init: 0.05
+    max_num: 500000
 
-    # coarse to fine hash grid encoding
-    # to ensure smooth analytic normals
-    pos_encoding_config:
-      otype: HashGrid
-      n_levels: 16
-      n_features_per_level: 2
-      log2_hashmap_size: 19
-      base_resolution: 16
-      per_level_scale: 1.447269237440378 # max resolution 4096
-    mlp_network_config:
-      otype: "VanillaMLP"
-      activation: "ReLU"
-      output_activation: "none"
-      n_neurons: 64
-      n_hidden_layers: 2
+  exporter_type: "gaussian-mesh-exporter"
+
   material_type: "diffuse-with-point-light-material"
   material:
     ambient_only_steps: 100000
     textureless_prob: 0.05
     albedo_activation: sigmoid
-  renderer_type: "nerf-volume-renderer"
+
+  renderer_type: "diff-gaussian-rasterizer-advanced"
   renderer:
-    radius: ${system.geometry.radius}
-    num_samples_per_ray: 512
-    return_comp_normal: ${gt0:${system.loss.lambda_normal_smooth}}
-    return_normal_perturb: ${gt0:${system.loss.lambda_3d_normal_smooth}}
-  guidance_type: "zero123-guidance"
+    debug: false
+    invert_bg_prob: 1.0
+
+  guidance_type: "stable-zero123-guidance"
   guidance:
-    pretrained_model_name_or_path: "./load/zero123/105000.ckpt"
+    pretrained_model_name_or_path: "./load/zero123/sd-objaverse-finetune-c_concat-256.yaml"
     pretrained_config: "./load/zero123/sd-objaverse-finetune-c_concat-256.yaml"
     cond_image_path: ${data.image_path}
     cond_elevation_deg: ${data.default_elevation_deg}
     cond_azimuth_deg: ${data.default_azimuth_deg}
     cond_camera_distance: ${data.default_camera_distance}
     guidance_scale: 3.0
-    min_step_percent: [0, 0.4, 0.2, 200]  # (start_iter, start_val, end_val, end_iter)
-    max_step_percent: [0, 0.85, 0.5, 200]
+    min_step_percent: [50, 0.7, 0.3, 200]  # (start_iter, start_val, end_val, end_iter)
+    max_step_percent: [50, 0.98, 0.8, 200]
 
 # adding-------------------------------------------------------------------------      
   background_type: "solid-color-background" # unused

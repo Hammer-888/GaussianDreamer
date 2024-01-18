@@ -104,6 +104,8 @@ class GaussianDreamer(BaseLift3DSystem):
         radius: float = 4
         ambient_ratio_min: float = 0.5
         renderer_type: str = "nerf-volume-renderer"
+        freq: dict = field(default_factory=dict)
+        back_ground_color: Tuple[float, float, float] = (1, 1, 1)
         sh_degree: int = 0
         load_type: int = 0
         load_path: str = "./load/shapes/stand.obj"
@@ -113,6 +115,7 @@ class GaussianDreamer(BaseLift3DSystem):
     def configure(self) -> None:
         super().configure()
         self.radius = self.cfg.radius
+        self.automatic_optimization = False
         self.sh_degree = self.cfg.sh_degree
         self.load_type = self.cfg.load_type
         self.load_path = self.cfg.load_path
@@ -363,6 +366,9 @@ class GaussianDreamer(BaseLift3DSystem):
             rgb_as_latents=False,
             guidance_eval=guidance_eval,
         )
+        self.visibility_filter = out["visibility_filter"]
+        self.radii = out["radii"]
+        self.viewspace_point_list = [out["viewspace_points"]]
 
         loss = 0.0
 
