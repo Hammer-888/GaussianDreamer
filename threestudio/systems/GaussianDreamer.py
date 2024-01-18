@@ -314,10 +314,12 @@ class GaussianDreamer(BaseLift3DSystem):
     #     }
 
     def forward(self, batch: Dict[str, Any]) -> Dict[str, Any]:
-        render_out = self.renderer(**batch)
+        self.geometry.update_learning_rate(self.global_step)
+        outputs = self.renderer.batch_forward(batch)
         return {
-            **render_out,
+            **outputs,
         }
+
 
     def on_fit_start(self) -> None:
         super().on_fit_start()
@@ -338,7 +340,7 @@ class GaussianDreamer(BaseLift3DSystem):
         self.gaussian.update_learning_rate(self.true_global_step)
 
         # adding
-        # batch = batch["random_camera"]
+        batch = batch["random_camera"]
         ambient_ratio = (
             self.cfg.ambient_ratio_min
             + (1 - self.cfg.ambient_ratio_min) * random.random()
