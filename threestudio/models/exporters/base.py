@@ -5,7 +5,6 @@ import numpy as np
 import threestudio
 import torch
 from threestudio.models.background.base import BaseBackground
-from threestudio.models.exporters.base import Exporter, ExporterOutput
 from threestudio.models.geometry.base import BaseImplicitGeometry, BaseGeometry
 from threestudio.models.materials.base import BaseMaterial
 from threestudio.models.mesh import Mesh
