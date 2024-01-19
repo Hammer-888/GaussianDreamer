@@ -1,6 +1,7 @@
 import gc
 import os
 import re
+import math
 
 import tinycudann as tcnn
 import torch
