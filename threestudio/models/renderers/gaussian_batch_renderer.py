@@ -56,9 +56,9 @@ class GaussianBatchRenderer:
                     pred_normals.append(render_pkg["pred_normal"])
                 if render_pkg.__contains__("depth"):
                     depths.append(render_pkg["depth"])
-                if render_pkg.__contains__("mask"):
-                    # masks.append(batch["mask"])
-                    masks = batch["mask"]
+                # if render_pkg.__contains__("mask"):
+                # masks.append(batch["mask"])
+                # masks = batch["mask"]
 
         outputs = {
             "comp_rgb": torch.stack(renders, dim=0).permute(0, 2, 3, 1),
@@ -86,10 +86,10 @@ class GaussianBatchRenderer:
                     "comp_depth": torch.stack(depths, dim=0).permute(0, 2, 3, 1),
                 }
             )
-        if len(masks) > 0:
-            outputs.update(
-                {
-                    "comp_mask": torch.stack(masks, dim=0).permute(0, 2, 3, 1),
-                }
-            )
+        # if len(masks) > 0:
+        #     outputs.update(
+        #         {
+        #             "comp_mask": torch.stack(masks, dim=0).permute(0, 2, 3, 1),
+        #         }
+        #     )
         return outputs
